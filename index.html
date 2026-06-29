@@ -4,7 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Ortofotomapa — Ruiny</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <style>
     html, body { margin: 0; height: 100%; }
     #map { width: 100%; height: 100%; background: #e8e8d8; }
@@ -21,35 +22,40 @@
     Ortofotomapa — Ruiny (RGB), nalot 2026-05-26<br>
     Źródło: djiag.com &nbsp;|&nbsp; Powierzchnia pola: 29,42 ha
   </div>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    var map = L.map('map');
+    window.addEventListener('load', function () {
+      if (typeof L === 'undefined') {
+        document.body.innerHTML = '<p style="font:16px sans-serif;padding:20px">Nie udało się załadować biblioteki mapy (Leaflet). Sprawdź połączenie z internetem i odśwież stronę.</p>';
+        return;
+      }
 
-    // Podklad OSM (kontekst: drogi, rzeki)
-    var osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '© OpenStreetMap'
-    }).addTo(map);
+      // maxZoom calej mapy = jak bardzo klient moze przyblizyc (22)
+      // maxNativeZoom ortofoto = 18 (tyle kafelkow masz) -> wyzej Leaflet rozciaga ostatni poziom
+      var map = L.map('map', { maxZoom: 22 });
 
-    // Twoje ortofoto (kafelki wygenerowane w QGIS)
-    var orto = L.tileLayer('tiles/{z}/{x}/{y}.png', {
-      minZoom: 12,
-      maxZoom: 18,
-      tms: false,
-      opacity: 1.0,
-      attribution: 'Ortofoto: djiag.com'
-    }).addTo(map);
+      var osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 22,
+        maxNativeZoom: 19,
+        attribution: '© OpenStreetMap'
+      }).addTo(map);
 
-    // Przelacznik warstw
-    L.control.layers(
-      { "OpenStreetMap": osm },
-      { "Ortofotomapa": orto },
-      { collapsed: false }
-    ).addTo(map);
+      var orto = L.tileLayer('tiles/{z}/{x}/{y}.png', {
+        minZoom: 12,
+        maxZoom: 22,
+        maxNativeZoom: 21,
+        tms: false,
+        opacity: 1.0,
+        attribution: 'Ortofoto: djiag.com'
+      }).addTo(map);
 
-    // Ustaw widok na obszar ortofoto (przyblizone wspolrzedne terenu)
-    // EPSG:2180 ~ okolice 52.078 N, 21.169 E (z Twoich danych)
-    map.setView([52.078, 21.169], 15);
+      L.control.layers(
+        { "OpenStreetMap": osm },
+        { "Ortofotomapa": orto },
+        { collapsed: false }
+      ).addTo(map);
+
+      map.setView([52.078, 21.169], 15);
+    });
   </script>
 </body>
 </html>
